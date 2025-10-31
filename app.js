@@ -6,10 +6,9 @@ let taxis = [
 ];
 
 let waitingQueue = [];
+let requests =[];
 
 function orderTaxi() {
-    let requests = [{ reqId: requests.length + 1, position: userPosition, duration: rideDuration, time: requestTime }];
-
     let userPosition = Number(prompt("Enter your current position: "));
     let rideDuration = Number(prompt("Enter estimated duration: "));
     let requestTime = Number(prompt("Enter request time (minute): "));
@@ -20,38 +19,11 @@ function orderTaxi() {
         duration: rideDuration,
         time: requestTime
     };
-
+    
     requests.push(newRequest);
 };
 
-function assignNearTaxi(request) {
-    let nearTaxi = null;
-    let minDistance = 200;
 
-    for (let i = 0; i < taxis.length; i++) {
-        let distance = Math.abs(taxis[i].position - request.position);
-        if (taxis[i].available == true) {
-            if (minDistance > distance) {
-                minDistance = distance;
-                nearTaxi = taxis[i];
-            }
-        }
-    }
-
-
-    if (nearTaxi !== null) {
-        nearTaxi.available = false;
-        nearTaxi.timeRemaining = request.duration;
-        nearTaxi.position = request.position;
-
-        nearTaxi.totalRides += 1;
-
-        console.log(`taxi : ${nearTaxi.id} assined to ${request.reqId}`)
-    } else {
-        console.log("no taxis available you are in waitingQueue");
-        waitingQueue.push(request);
-    }
-}
 
 function updateTaxis() {
     for (let i = 0; i < taxis.length; i++) {
@@ -66,36 +38,62 @@ function updateTaxis() {
     }
 }
 
-function just(){
+function simulate() {
     let currentMinute = 0;
     let maxMinutes = 30;
 
-    while(currentMinute < maxMinutes){
-        for(let i = 0; i < requests.length; i++ ){
-            if(requests[i].time === currentMinute){
+    while (currentMinute < maxMinutes) {
+        for (let i = 0; i < requests.length; i++) {
+            if (requests[i].time === currentMinute) {
                 assignNearTaxi(requests[i]);
             }
         }
 
         updateTaxis();
 
-        for(let i = 0; i < taxis.length; i++){
-            if(taxis[i].available === true && waitingQueue.length > 0){
+        for (let i = 0; i < taxis.length; i++) {
+            if (taxis[i].available === true && waitingQueue.length > 0) {
                 let nextRequest = waitingQueue.shift();
-                console.log(`taxi &{taxi[i].id} taking request ${nextRequest.reqId} from the queue. `)
+                console.log(`taxi ${taxis[i].id} taking request ${nextRequest.reqId} from the queue.`)
             }
         }
 
         let done = true;
+
+        for (let i = 0; i < taxis.length; i++) {
+            if (!taxis[i].available) {
+                done = false;
+                break;
+            }
+        }
+        if (waitingQueue.length > 0) {
+            done = false;
+        }
+        else if (done && currentMinute > 0) {
+            console.log("all ride complaited");
+            break;
+        }
+        currentMinute++;
     }
 
+    finalReport()
+}
 
+function finalReport() {
+    let totalRides = 0;
+    for (let i = 0; i < taxis.length; i++) {
+
+        console.log(`taxi ${taxis[i].id} -- ride : ${taxis[i].totalRides} -- final position : ${taxis[i].position} `)
+        totalRides += taxis[i].totalRides;
+    }
+
+    console.log("toltal rides: ", totalRides);
 }
 
 function availableTaxis() {
     for (let i = 0; i < taxis.length; i++) {
         if (taxis[i].available === true) {
-            console.log('taxi id', taxis[i].id, ':', 'taxi status', taxis[i].available);
+            console.log('taxi id', taxis[i].id, ':','taxi position', taxis[i].position, 'taxi status', taxis[i].available);
         }
     }
 }
@@ -105,11 +103,11 @@ function menu() {
 
     while (true) {
 
-        console.log("==================================\n");
+        console.log("==================================");
         console.log("wellcome smart taxi");
         console.log("==================================\n");
-        console.log("1- view avalibels taxis : ");
-        console.log("2-order a taxi : ");
+        console.log("1- view avalibels taxis");
+        console.log("2- order a taxi");
         console.log("3- start simulate");
         console.log("4- view find request");
         console.log("0- exit");
@@ -129,13 +127,8 @@ function menu() {
                 orderTaxi()
                 break;
             case "3":
-                updateTaxis();
+                simulate();
                 break;
-            case "4":
-
-                break;
-            case "0":
-
             default:
                 break;
         }
