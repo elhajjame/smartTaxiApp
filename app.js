@@ -36,7 +36,7 @@ function orderTaxi() {
 
 function assignNearTaxi(request) {
     let nearTaxi = null;
-    let minDistance = Infinity;
+    let minDistance = 999;
 
 
     for (let i = 0; i < taxis.length; i++) {
@@ -82,7 +82,6 @@ function updateTaxis(request) {
         }
     }
 }
-
 function simulate() {
     let currentMinute = 0;
     let maxMinutes = 30;
